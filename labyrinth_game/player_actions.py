@@ -1,7 +1,7 @@
 # labyrinth_game/player_actions.py
 
 from .constants import ROOMS
-from .utils import describe_current_room
+from .utils import describe_current_room, random_event
 
 
 def get_input(prompt: str = "> ") -> str:
@@ -28,13 +28,28 @@ def move_player(game_state: dict, direction: str) -> None:
     room = ROOMS[room_name]
     exits = room.get("exits", {})
 
-    if direction in exits:
-        new_room = exits[direction]
-        game_state["current_room"] = new_room
-        game_state["steps_taken"] += 1
-        describe_current_room(game_state)
-    else:
+    if direction not in exits:
         print("Нельзя пойти в этом направлении.")
+        return
+
+    new_room = exits[direction]
+
+    # Проверка доступа в комнату сокровищ
+    if new_room == "treasure_room":
+        inventory = game_state["player_inventory"]
+        if "rusty_key" in inventory:
+            print(
+                "Вы используете найденный ключ, чтобы открыть путь "
+                "в комнату сокровищ."
+            )
+        else:
+            print("Дверь заперта. Нужен ключ, чтобы пройти дальше.")
+            return
+
+    game_state["current_room"] = new_room
+    game_state["steps_taken"] += 1
+    describe_current_room(game_state)
+    random_event(game_state)
 
 
 def take_item(game_state: dict, item_name: str) -> None:
@@ -73,3 +88,4 @@ def use_item(game_state: dict, item_name: str) -> None:
             inventory.append("rusty_key")
     else:
         print("Вы не знаете, как использовать этот предмет.")
+

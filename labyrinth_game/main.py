@@ -2,6 +2,7 @@
 
 # labyrinth_game/main.py
 
+from .constants import COMMANDS
 from .player_actions import (
     get_input,
     move_player,
@@ -9,19 +10,10 @@ from .player_actions import (
     take_item,
     use_item,
 )
-from .utils import (
-    attempt_open_treasure,
-    describe_current_room,
-    show_help,
-    solve_puzzle,
-)
+from .utils import attempt_open_treasure, describe_current_room, show_help, solve_puzzle
 
 
 def process_command(game_state: dict, command_line: str) -> None:
-    command_line = command_line.strip()
-    if not command_line:
-        return
-
     command_line = command_line.strip()
     if not command_line:
         return
@@ -56,7 +48,9 @@ def process_command(game_state: dict, command_line: str) -> None:
             else:
                 solve_puzzle(game_state)
         case "help":
-            show_help()
+            show_help(COMMANDS)
+        case "north" | "south" | "east" | "west":
+            move_player(game_state, command)
         case "quit" | "exit":
             print("Вы решили покинуть лабиринт. Игра окончена.")
             game_state["game_over"] = True
@@ -83,3 +77,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
