@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "project1-rozdorozhnyi-ilya-m25-555"
+version = "0.1.0"
+description = ""
+authors = ["ilya"]
+packages = [
+    { include = "labyrinth_game" },
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+project = "labyrinth_game.main:main"
+
