@@ -2,7 +2,13 @@
 
 import math
 
-from .constants import ROOMS
+from .constants import (
+    COMMANDS,
+    EVENT_PROBABILITY_MODULO,
+    ROOMS,
+    TRAP_DAMAGE_MODULO,
+    TRAP_DEATH_THRESHOLD,
+)
 
 
 def pseudo_random(seed: int, modulo: int) -> int:
@@ -17,7 +23,7 @@ def pseudo_random(seed: int, modulo: int) -> int:
 
 
 def describe_current_room(game_state: dict) -> None:
-    """Описание текущей комнаты."""
+    """Вывести описание текущей комнаты и доступные действия."""
     room_name = game_state["current_room"]
     room = ROOMS[room_name]
 
@@ -39,14 +45,18 @@ def describe_current_room(game_state: dict) -> None:
         print("Кажется, здесь есть загадка (используйте команду solve).")
 
 
-def show_help(commands: dict) -> None:
+def show_help(commands: dict | None = None) -> None:
+    """Показать доступные команды игроку."""
+    if commands is None:
+        commands = COMMANDS
+
     print("\nДоступные команды:")
     for pattern, description in commands.items():
         print(f"  {pattern.ljust(16)} - {description}")
 
 
 def trigger_trap(game_state: dict) -> None:
-    """Срабатывание ловушки с негативными последствиями."""
+    """Сымитировать срабатывание ловушки с негативными последствиями."""
     print("Ловушка активирована! Пол начинает дрожать...")
 
     inventory = game_state["player_inventory"]
@@ -57,8 +67,8 @@ def trigger_trap(game_state: dict) -> None:
         return
 
     # Инвентарь пуст — возможен смертельный исход
-    roll = pseudo_random(game_state["steps_taken"], 10)
-    if roll < 3:
+    roll = pseudo_random(game_state["steps_taken"], TRAP_DAMAGE_MODULO)
+    if roll < TRAP_DEATH_THRESHOLD:
         print("Пол разверзается под вами. Вы падаете в пропасть. Игра окончена.")
         game_state["game_over"] = True
     else:
@@ -66,11 +76,11 @@ def trigger_trap(game_state: dict) -> None:
 
 
 def random_event(game_state: dict) -> None:
-    """Случайные события при перемещении игрока."""
+    """Генерация небольших случайных событий при перемещении игрока."""
     seed = game_state["steps_taken"]
-    chance = pseudo_random(seed, 10)
+    chance = pseudo_random(seed, EVENT_PROBABILITY_MODULO)
 
-    # Низкая вероятность события, например, только если выпало 0
+    # Низкая вероятность события
     if chance != 0:
         return
 
@@ -97,7 +107,7 @@ def random_event(game_state: dict) -> None:
 
 
 def solve_puzzle(game_state: dict) -> None:
-    """Решение загадки в текущей комнате."""
+    """Позволить игроку попытаться решить загадку в текущей комнате."""
     room_name = game_state["current_room"]
     room = ROOMS[room_name]
     puzzle = room.get("puzzle")
@@ -114,7 +124,6 @@ def solve_puzzle(game_state: dict) -> None:
     correct = correct_answer.lower()
 
     alternatives = {correct}
-    # Примеры альтернатив: 10 -> "десять", 4 -> "четыре"
     if correct_answer == "10":
         alternatives.add("десять")
     if correct_answer == "4":
@@ -122,10 +131,8 @@ def solve_puzzle(game_state: dict) -> None:
 
     if user_answer in alternatives:
         print("Верно! Вы успешно решили загадку.")
-        # Убираем загадку, чтобы нельзя было решить её дважды
         room["puzzle"] = None
 
-        # Награда зависит от комнаты
         if room_name == "library":
             inventory = game_state["player_inventory"]
             if "treasure_key" not in inventory:
@@ -138,7 +145,7 @@ def solve_puzzle(game_state: dict) -> None:
 
 
 def attempt_open_treasure(game_state: dict) -> None:
-    """Попытка открыть сундук с сокровищами и логика победы."""
+    """Попытаться открыть сундук с сокровищами и завершить игру победой."""
     room_name = game_state["current_room"]
     if room_name != "treasure_room":
         print("Здесь нет сокровищного сундука.")
@@ -152,7 +159,6 @@ def attempt_open_treasure(game_state: dict) -> None:
         print("Сундук уже открыт или его здесь нет.")
         return
 
-    # Проверка ключа
     if "treasure_key" in inventory:
         print("Вы применяете ключ, и замок щёлкает. Сундук открыт!")
         items.remove("treasure_chest")
@@ -160,7 +166,6 @@ def attempt_open_treasure(game_state: dict) -> None:
         game_state["game_over"] = True
         return
 
-    # Предложение ввести код
     print("Сундук заперт. Похоже, его можно открыть кодом.")
     choice = input("Ввести код? (да/нет) ").strip().lower()
 

@@ -108,3 +108,8 @@ COMMANDS = {
     "help": "показать это сообщение",
 }
 
+# Константы для случайных событий и ловушек
+EVENT_PROBABILITY_MODULO = 10
+TRAP_DAMAGE_MODULO = 10
+TRAP_DEATH_THRESHOLD = 3
+
