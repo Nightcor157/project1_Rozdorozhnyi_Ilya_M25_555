@@ -9,6 +9,7 @@
 poetry install
 # или
 make install
+```
 
 ## Демонстрация (asciinema)
 
